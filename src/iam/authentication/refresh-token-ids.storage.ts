@@ -17,10 +17,14 @@ export class RefreshTokenIdsStorage
   onApplicationBootstrap() {
     // TODO: Ideally, we should move this to the dedicated "RedisModule"
     // instead of initiating the connection here.
-    this.redisClient = new Redis({
-      host: 'localhost', // NOTE: According to best practices, we should use the environment variables here instead.
-      port: 6379, // 👆
-    });
+
+    this.redisClient =
+      process.env.NODE_ENV === 'production'
+        ? new Redis(process.env.KV_URL)
+        : new Redis({
+            host: 'localhost', // NOTE: According to best practices, we should use the environment variables here instead.
+            port: 6379, // 👆
+          });
   }
 
   onApplicationShutdown(signal?: string) {
