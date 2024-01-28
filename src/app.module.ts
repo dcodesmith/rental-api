@@ -13,6 +13,7 @@ import { ConfigModule } from '@nestjs/config';
     CoffeesModule,
     UsersModule,
     TypeOrmModule.forRoot({
+      url: process.env.POSTGRES_URL,
       type: 'postgres',
       host: process.env.POSTGRES_HOST,
       port: +process.env.POSTGRES_PORT,
@@ -21,6 +22,10 @@ import { ConfigModule } from '@nestjs/config';
       database: process.env.POSTGRES_DATABASE,
       autoLoadEntities: true,
       synchronize: true,
+      ssl:
+        process.env.NODE_ENV === 'production'
+          ? { rejectUnauthorized: false }
+          : false,
     }),
     IamModule,
   ],
