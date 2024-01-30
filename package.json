@@ -27,6 +27,7 @@
     "@nestjs/mapped-types": "*",
     "@nestjs/platform-express": "^10.0.0",
     "@nestjs/typeorm": "^10.0.1",
+    "@vercel/kv": "^1.0.1",
     "@vercel/postgres": "^0.7.2",
     "bcrypt": "^5.1.1",
     "class-transformer": "^0.5.1",

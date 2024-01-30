@@ -4,6 +4,7 @@ import {
   OnApplicationShutdown,
 } from '@nestjs/common';
 import Redis from 'ioredis';
+import { createClient, VercelKV } from '@vercel/kv';
 
 // 💡 Ideally this should be in a separate file - putting this here for brevity
 export class InvalidatedRefreshTokenError extends Error {}
@@ -12,23 +13,31 @@ export class InvalidatedRefreshTokenError extends Error {}
 export class RefreshTokenIdsStorage
   implements OnApplicationBootstrap, OnApplicationShutdown
 {
-  private redisClient: Redis;
+  private redisClient: Redis | VercelKV;
+
+  createClient() {
+    return process.env.NODE_ENV === 'production'
+      ? createClient({
+          url: process.env.KV_REST_API_URL,
+          token: process.env.KV_REST_API_TOKEN,
+        })
+      : new Redis({
+          host: 'localhost', // NOTE: According to best practices, we should use the environment variables here instead.
+          port: 6379, // 👆
+        });
+  }
 
   onApplicationBootstrap() {
     // TODO: Ideally, we should move this to the dedicated "RedisModule"
     // instead of initiating the connection here.
 
-    this.redisClient =
-      process.env.NODE_ENV === 'production'
-        ? new Redis(process.env.KV_URL)
-        : new Redis({
-            host: 'localhost', // NOTE: According to best practices, we should use the environment variables here instead.
-            port: 6379, // 👆
-          });
+    this.redisClient = this.createClient();
   }
 
   onApplicationShutdown(signal?: string) {
-    return this.redisClient.quit();
+    if (this.redisClient instanceof Redis) {
+      return this.redisClient.quit();
+    }
   }
 
   async insert(userId: number, tokenId: string) {
